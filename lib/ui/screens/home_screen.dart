@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import '../../models/expense.dart';
 import '../../services/expense_storage_service.dart';
+import '../../services/export_service.dart';
 import '../widgets/expense_card.dart';
 import '../widgets/expense_bottom_sheet.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/expense_chart.dart';
 import '../widgets/about_dialog.dart';
+import '../widgets/expenses_detail_dialog.dart';
+import '../widgets/all_expenses_dialog.dart';
 
 /// Main home screen with expense list and summary
 class HomeScreen extends StatefulWidget {
@@ -148,13 +152,45 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  void _showExpensesDetail(String title, List<Expense> expenses) {
+    final total = _storageService.calculateTotal(expenses);
+    showDialog(
+      context: context,
+      builder: (context) =>
+          ExpensesDetailDialog(title: title, expenses: expenses, total: total),
+    );
+  }
+
+  List<Expense> _getTodayExpenses() {
+    final today = DateTime.now();
+    return _expenses.where((e) {
+      return e.date.year == today.year &&
+          e.date.month == today.month &&
+          e.date.day == today.day;
+    }).toList();
+  }
+
+  List<Expense> _getWeekExpenses() {
+    return _storageService.getExpensesForCurrentWeek();
+  }
+
+  List<Expense> _getMonthExpenses() {
+    final now = DateTime.now();
+    return _storageService.getExpensesForMonth(now.year, now.month);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: LoadingAnimationWidget.staggeredDotsWave(
+                color: theme.colorScheme.primary,
+                size: 50,
+              ),
+            )
           : _buildBody(theme),
       floatingActionButton: _selectedIndex == 0
           ? FloatingActionButton.extended(
@@ -222,9 +258,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           expandedHeight: 120,
           floating: true,
           pinned: true,
+          centerTitle: false,
           actions: [
             Padding(
-              padding: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.only(right: 16, top: 8),
               child: IconButton(
                 onPressed: () {
                   showDialog(
@@ -234,7 +271,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 },
                 icon: Icon(
                   Icons.account_circle_rounded,
-                  size: 28,
+                  size: 32,
                   color: theme.colorScheme.primary,
                 ),
                 tooltip: 'About Developer',
@@ -263,6 +300,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     amount: _storageService.getTodayTotal(),
                     icon: Icons.today_rounded,
                     color: theme.colorScheme.tertiary,
+                    onTap: () =>
+                        _showExpensesDetail('Today', _getTodayExpenses()),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -272,6 +311,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     amount: _storageService.getCurrentMonthTotal(),
                     icon: Icons.calendar_month_rounded,
                     color: theme.colorScheme.primary,
+                    onTap: () =>
+                        _showExpensesDetail('This Month', _getMonthExpenses()),
                   ),
                 ),
               ],
@@ -331,9 +372,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           expandedHeight: 120,
           floating: true,
           pinned: true,
+          centerTitle: false,
           actions: [
+            if (_expenses.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.only(right: 8, top: 8),
+                child: IconButton(
+                  onPressed: () => ExportService.shareExpenses(_expenses),
+                  icon: const Icon(Icons.share_rounded),
+                  tooltip: 'Share',
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 8, top: 8),
+                child: IconButton(
+                  onPressed: () => ExportService.downloadExpensePDF(_expenses),
+                  icon: const Icon(Icons.download_rounded),
+                  tooltip: 'Download PDF',
+                ),
+              ),
+            ],
             Padding(
-              padding: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.only(right: 16, top: 8),
               child: IconButton(
                 onPressed: () {
                   showDialog(
@@ -343,7 +403,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 },
                 icon: Icon(
                   Icons.account_circle_rounded,
-                  size: 28,
+                  size: 32,
                   color: theme.colorScheme.primary,
                 ),
                 tooltip: 'About Developer',
@@ -373,6 +433,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                     icon: Icons.date_range_rounded,
                     color: theme.colorScheme.secondary,
+                    onTap: () =>
+                        _showExpensesDetail('This Week', _getWeekExpenses()),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -382,6 +444,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     amount: _storageService.getCurrentMonthTotal(),
                     icon: Icons.calendar_month_rounded,
                     color: theme.colorScheme.primary,
+                    onTap: () =>
+                        _showExpensesDetail('This Month', _getMonthExpenses()),
                   ),
                 ),
               ],
@@ -468,6 +532,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                       );
                     }),
+                    const SizedBox(height: 20),
+                    // View All Expenses Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) =>
+                                AllExpensesDialog(expenses: _expenses),
+                          );
+                        },
+                        icon: const Icon(Icons.list_rounded),
+                        label: const Text('View All Expenses'),
+                      ),
+                    ),
                   ],
                 ),
               ),

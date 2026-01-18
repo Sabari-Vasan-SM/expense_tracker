@@ -58,7 +58,7 @@ class AboutDeveloperDialog extends StatelessWidget {
                   ),
                   child: ClipOval(
                     child: Image.asset(
-                      'assets/pp.img.png',
+                      'assets/pp.png',
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(

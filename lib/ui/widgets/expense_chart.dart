@@ -289,10 +289,7 @@ class _ExpenseChartState extends State<ExpenseChart>
               ),
             ),
             const SizedBox(width: 6),
-            Text(
-              '${entry.key.icon} ${entry.key.displayName}',
-              style: theme.textTheme.bodySmall,
-            ),
+            Text(entry.key.displayName, style: theme.textTheme.bodySmall),
           ],
         );
       }).toList(),

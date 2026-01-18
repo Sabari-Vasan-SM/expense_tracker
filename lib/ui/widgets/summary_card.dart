@@ -6,6 +6,7 @@ class SummaryCard extends StatelessWidget {
   final double amount;
   final IconData icon;
   final Color? color;
+  final VoidCallback? onTap;
 
   const SummaryCard({
     super.key,
@@ -13,6 +14,7 @@ class SummaryCard extends StatelessWidget {
     required this.amount,
     required this.icon,
     this.color,
+    this.onTap,
   });
 
   @override
@@ -32,52 +34,56 @@ class SummaryCard extends StatelessWidget {
       },
       child: Card(
         color: cardColor.withOpacity(0.1),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: cardColor.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: cardColor.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(icon, color: cardColor, size: 24),
                     ),
-                    child: Icon(icon, color: cardColor, size: 24),
-                  ),
-                  const Spacer(),
-                  Icon(
-                    Icons.trending_up_rounded,
-                    color: cardColor.withOpacity(0.6),
-                    size: 20,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.outline,
+                    const Spacer(),
+                    Icon(
+                      Icons.trending_up_rounded,
+                      color: cardColor.withOpacity(0.6),
+                      size: 20,
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 4),
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: amount),
-                duration: const Duration(milliseconds: 800),
-                curve: Curves.easeOutCubic,
-                builder: (context, value, child) {
-                  return Text(
-                    '₹${value.toStringAsFixed(2)}',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: cardColor,
-                    ),
-                  );
-                },
-              ),
-            ],
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.outline,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: amount),
+                  duration: const Duration(milliseconds: 800),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) {
+                    return Text(
+                      '₹${value.toStringAsFixed(2)}',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: cardColor,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
