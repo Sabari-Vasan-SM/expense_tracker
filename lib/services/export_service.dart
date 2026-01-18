@@ -6,8 +6,12 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
-import 'dart:html' if (dart.library.html) 'dart:html' as html;
 import '../models/expense.dart';
+
+// Conditional import for web
+import 'export_service_web.dart'
+    if (dart.library.io) 'export_service_stub.dart'
+    as web_helper;
 
 /// Service for exporting expenses to PDF and sharing
 class ExportService {
@@ -479,10 +483,10 @@ class ExportService {
   /// Share expenses as TXT
   static Future<void> shareExpenses(List<Expense> expenses) async {
     if (kIsWeb) {
-      // For web, generate text and copy to clipboard / show share dialog
+      // For web, generate text and copy to clipboard
       final textContent = await _generateExpenseText(expenses);
       try {
-        await html.window.navigator.clipboard!.writeText(textContent);
+        await web_helper.copyToClipboard(textContent);
         print('Expense data copied to clipboard');
       } catch (e) {
         print('Failed to copy to clipboard: $e');
@@ -508,15 +512,10 @@ class ExportService {
 
     if (kIsWeb) {
       // For web, trigger browser download
-      final blob = html.Blob([pdfBytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute(
-          'download',
-          'Expense_Report_${DateTime.now().millisecondsSinceEpoch}.pdf',
-        )
-        ..click();
-      html.Url.revokeObjectUrl(url);
+      web_helper.downloadFile(
+        pdfBytes,
+        'Expense_Report_${DateTime.now().millisecondsSinceEpoch}.pdf',
+      );
       print('PDF downloaded successfully');
     } else {
       // For mobile, file is already saved
