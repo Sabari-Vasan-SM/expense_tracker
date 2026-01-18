@@ -40,10 +40,7 @@ class AboutDeveloperDialog extends StatelessWidget {
                 builder: (context, value, child) {
                   return Transform.scale(
                     scale: value,
-                    child: Opacity(
-                      opacity: value,
-                      child: child,
-                    ),
+                    child: Opacity(opacity: value, child: child),
                   );
                 },
                 child: Container(
@@ -51,12 +48,6 @@ class AboutDeveloperDialog extends StatelessWidget {
                   height: 120,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [
-                        theme.colorScheme.primary,
-                        theme.colorScheme.secondary,
-                      ],
-                    ),
                     boxShadow: [
                       BoxShadow(
                         color: theme.colorScheme.primary.withValues(alpha: 0.3),
@@ -65,11 +56,20 @@ class AboutDeveloperDialog extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: Center(
-                    child: Icon(
-                      Icons.person_rounded,
-                      size: 60,
-                      color: Colors.white,
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/pp.img.png',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: theme.colorScheme.primaryContainer,
+                          child: Icon(
+                            Icons.person_rounded,
+                            size: 60,
+                            color: theme.colorScheme.primary,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -84,10 +84,7 @@ class AboutDeveloperDialog extends StatelessWidget {
                 builder: (context, value, child) {
                   return Transform.translate(
                     offset: Offset(0, 20 * (1 - value)),
-                    child: Opacity(
-                      opacity: value,
-                      child: child,
-                    ),
+                    child: Opacity(opacity: value, child: child),
                   );
                 },
                 child: Column(
@@ -119,10 +116,7 @@ class AboutDeveloperDialog extends StatelessWidget {
                 duration: const Duration(milliseconds: 800),
                 curve: Curves.easeOutCubic,
                 builder: (context, value, child) {
-                  return Opacity(
-                    opacity: value,
-                    child: child,
-                  );
+                  return Opacity(opacity: value, child: child);
                 },
                 child: Column(
                   children: [
@@ -151,7 +145,8 @@ class AboutDeveloperDialog extends StatelessWidget {
                       label: 'LinkedIn',
                       url: 'linkedin.com/in/sabarivasan-s-m',
                       onTap: () => _launchUrl(
-                          'https://www.linkedin.com/in/sabarivasan-s-m-b10229255/'),
+                        'https://www.linkedin.com/in/sabarivasan-s-m-b10229255/',
+                      ),
                     ),
                   ],
                 ),
@@ -164,10 +159,7 @@ class AboutDeveloperDialog extends StatelessWidget {
                 duration: const Duration(milliseconds: 900),
                 curve: Curves.easeOutCubic,
                 builder: (context, value, child) {
-                  return Opacity(
-                    opacity: value,
-                    child: child,
-                  );
+                  return Opacity(opacity: value, child: child);
                 },
                 child: Text(
                   'Expense Tracker v1.0.0',
@@ -231,11 +223,7 @@ class _SocialLinkButtonState extends State<_SocialLinkButton> {
           ),
           child: Row(
             children: [
-              Icon(
-                widget.icon,
-                color: theme.colorScheme.primary,
-                size: 24,
-              ),
+              Icon(widget.icon, color: theme.colorScheme.primary, size: 24),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
