@@ -6,6 +6,7 @@ import '../widgets/expense_bottom_sheet.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/expense_chart.dart';
+import '../widgets/about_dialog.dart';
 
 /// Main home screen with expense list and summary
 class HomeScreen extends StatefulWidget {
@@ -221,6 +222,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           expandedHeight: 120,
           floating: true,
           pinned: true,
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: IconButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => const AboutDeveloperDialog(),
+                  );
+                },
+                icon: Icon(
+                  Icons.account_circle_rounded,
+                  size: 28,
+                  color: theme.colorScheme.primary,
+                ),
+                tooltip: 'About Developer',
+              ),
+            ),
+          ],
           flexibleSpace: FlexibleSpaceBar(
             title: Text(
               'Expenses',
@@ -311,6 +331,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           expandedHeight: 120,
           floating: true,
           pinned: true,
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: IconButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => const AboutDeveloperDialog(),
+                  );
+                },
+                icon: Icon(
+                  Icons.account_circle_rounded,
+                  size: 28,
+                  color: theme.colorScheme.primary,
+                ),
+                tooltip: 'About Developer',
+              ),
+            ),
+          ],
           flexibleSpace: FlexibleSpaceBar(
             title: Text(
               'Analytics',
@@ -390,9 +429,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           children: [
                             Row(
                               children: [
-                                Text(
-                                  category.icon,
-                                  style: const TextStyle(fontSize: 20),
+                                Icon(
+                                  category.iconData,
+                                  size: 24,
+                                  color: Color(category.colorValue),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -402,7 +442,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   ),
                                 ),
                                 Text(
-                                  '\$${amount.toStringAsFixed(2)}',
+                                  '₹${amount.toStringAsFixed(2)}',
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     fontWeight: FontWeight.w600,
                                   ),

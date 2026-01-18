@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
 part 'expense.g.dart';
@@ -37,15 +38,30 @@ extension ExpenseCategoryExtension on ExpenseCategory {
   String get icon {
     switch (this) {
       case ExpenseCategory.food:
-        return '🍔';
+        return 'restaurant';
       case ExpenseCategory.travel:
-        return '✈️';
+        return 'flight';
       case ExpenseCategory.bills:
-        return '📄';
+        return 'receipt_long';
       case ExpenseCategory.shopping:
-        return '🛒';
+        return 'shopping_cart';
       case ExpenseCategory.other:
-        return '📦';
+        return 'inventory_2';
+    }
+  }
+
+  IconData get iconData {
+    switch (this) {
+      case ExpenseCategory.food:
+        return Icons.restaurant_rounded;
+      case ExpenseCategory.travel:
+        return Icons.flight_rounded;
+      case ExpenseCategory.bills:
+        return Icons.receipt_long_rounded;
+      case ExpenseCategory.shopping:
+        return Icons.shopping_cart_rounded;
+      case ExpenseCategory.other:
+        return Icons.inventory_2_rounded;
     }
   }
 

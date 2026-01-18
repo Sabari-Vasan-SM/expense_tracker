@@ -132,7 +132,7 @@ class _ExpenseChartState extends State<ExpenseChart>
             tooltipRoundedRadius: 8,
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               return BarTooltipItem(
-                '\$${rod.toY.toStringAsFixed(2)}',
+                '₹${rod.toY.toStringAsFixed(2)}',
                 TextStyle(
                   color: theme.colorScheme.onInverseSurface,
                   fontWeight: FontWeight.bold,
@@ -172,7 +172,7 @@ class _ExpenseChartState extends State<ExpenseChart>
               reservedSize: 48,
               getTitlesWidget: (value, meta) {
                 return Text(
-                  '\$${value.toInt()}',
+                  '₹${value.toInt()}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.outline,
                   ),

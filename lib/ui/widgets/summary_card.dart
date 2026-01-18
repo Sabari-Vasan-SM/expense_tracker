@@ -69,7 +69,7 @@ class SummaryCard extends StatelessWidget {
                 curve: Curves.easeOutCubic,
                 builder: (context, value, child) {
                   return Text(
-                    '\$${value.toStringAsFixed(2)}',
+                    '₹${value.toStringAsFixed(2)}',
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: cardColor,

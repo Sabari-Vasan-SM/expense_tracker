@@ -52,9 +52,10 @@ class _ExpenseCardState extends State<ExpenseCard> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Center(
-                    child: Text(
-                      widget.expense.category.icon,
-                      style: const TextStyle(fontSize: 24),
+                    child: Icon(
+                      widget.expense.category.iconData,
+                      color: categoryColor,
+                      size: 28,
                     ),
                   ),
                 ),
@@ -109,7 +110,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '\$${widget.expense.amount.toStringAsFixed(2)}',
+                      '₹${widget.expense.amount.toStringAsFixed(2)}',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: theme.colorScheme.primary,

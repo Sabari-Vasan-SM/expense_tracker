@@ -101,7 +101,7 @@ class _ExpenseBottomSheetState extends State<ExpenseBottomSheet>
                 decoration: const InputDecoration(
                   labelText: 'Amount',
                   hintText: '0.00',
-                  prefixIcon: Icon(Icons.attach_money_rounded),
+                  prefixIcon: Icon(Icons.currency_rupee_rounded),
                 ),
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
@@ -131,7 +131,7 @@ class _ExpenseBottomSheetState extends State<ExpenseBottomSheet>
                       onSelected: (_) {
                         setState(() => _selectedCategory = category);
                       },
-                      avatar: Text(category.icon),
+                      avatar: Icon(category.iconData, size: 18),
                       label: Text(category.displayName),
                       selectedColor: categoryColor.withOpacity(0.3),
                       checkmarkColor: categoryColor,
