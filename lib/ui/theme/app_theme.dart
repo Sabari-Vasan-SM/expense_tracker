@@ -9,16 +9,24 @@ class AppTheme {
   static const Color backgroundColor = Color(0xFFF7F2FA);
 
   static ThemeData lightTheme({ColorScheme? colorScheme}) {
-    final ColorScheme scheme =
+    final ColorScheme baseScheme =
         colorScheme ??
         ColorScheme.fromSeed(
           seedColor: primaryColor,
           brightness: Brightness.light,
         );
+    final ColorScheme scheme = baseScheme.copyWith(
+      surface: Colors.white,
+      background: Colors.white,
+      surfaceTint: Colors.transparent,
+    );
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
+      scaffoldBackgroundColor: Colors.white,
+      dialogBackgroundColor: Colors.white,
+      cardColor: Colors.white,
       fontFamily: 'Roboto',
       appBarTheme: const AppBarTheme(
         centerTitle: true,

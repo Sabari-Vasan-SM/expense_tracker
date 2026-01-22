@@ -137,26 +137,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  void _showAddExpenseSheet() {
+  void _showExpenseSheet({Expense? expense}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (context) => ExpenseBottomSheet(onSave: _addExpense),
-    );
-  }
-
-  void _showEditExpenseSheet(Expense expense) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (context) => ExpenseBottomSheet(
-        expense: expense,
-        onSave: (title, amount, category, date, paymentMethod) {
-          _updateExpense(expense, title, amount, category, date, paymentMethod);
-        },
-      ),
+      builder: (context) {
+        return ExpenseBottomSheet(
+          expense: expense,
+          onSave: (title, amount, category, date, paymentMethod) {
+            if (expense == null) {
+              _addExpense(title, amount, category, date, paymentMethod);
+            } else {
+              _updateExpense(
+                expense,
+                title,
+                amount,
+                category,
+                date,
+                paymentMethod,
+              );
+            }
+          },
+        );
+      },
     );
   }
 
@@ -202,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           : _buildBody(theme),
       floatingActionButton: _selectedIndex == 0
           ? FloatingActionButton.extended(
-              onPressed: _showAddExpenseSheet,
+              onPressed: () => _showExpenseSheet(),
               icon: const Icon(Icons.add_rounded),
               label: const Text('Add Expense'),
             )
@@ -304,7 +308,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 title: 'No expenses yet',
                 subtitle:
                     'Start tracking your expenses by adding your first one.',
-                onAction: _showAddExpenseSheet,
+                onAction: () => _showExpenseSheet(),
                 actionLabel: 'Add Expense',
               ),
             ),
@@ -366,7 +370,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   child: ExpenseCard(
                     expense: expense,
                     animation: animation,
-                    onTap: () => _showEditExpenseSheet(expense),
+                    onTap: () => _showExpenseSheet(expense: expense),
                     onDelete: () => _showDeleteConfirmation(index),
                   ),
                 );
@@ -838,11 +842,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             icon: Icon(Icons.dark_mode, size: 16),
                           ),
                         ],
-                        selected: {
-                          widget.currentThemeMode == ThemeMode.system
-                              ? ThemeMode.dark
-                              : widget.currentThemeMode,
-                        },
+                        selected: {widget.currentThemeMode},
                         onSelectionChanged: (Set<ThemeMode> newSelection) {
                           widget.onThemeChanged(newSelection.first);
                           Navigator.pop(context);

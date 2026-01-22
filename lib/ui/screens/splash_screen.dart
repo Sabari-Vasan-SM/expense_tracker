@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({
@@ -54,24 +53,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _goToHome() async {
     if (!mounted) return;
-    await Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 400),
-        pageBuilder: (_, __, ___) => HomeScreen(
-          onThemeChanged: widget.onThemeChanged,
-          currentThemeMode: widget.currentThemeMode,
-        ),
-        transitionsBuilder: (_, animation, __, child) {
-          return FadeTransition(
-            opacity: CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeInOut,
-            ),
-            child: child,
-          );
-        },
-      ),
-    );
+    await Navigator.of(context).pushReplacementNamed('/home');
   }
 
   @override
