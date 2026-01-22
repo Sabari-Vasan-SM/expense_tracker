@@ -386,7 +386,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               Padding(
                 padding: const EdgeInsets.only(right: 8, top: 8),
                 child: IconButton(
-                  onPressed: () => ExportService.downloadExpensePDF(_expenses),
+                  onPressed: () async {
+                    final path = await ExportService.downloadExpensePDF(
+                      _expenses,
+                    );
+                    if (!mounted) return;
+                    final message = path != null
+                        ? 'PDF saved/share sheet opened. File: $path'
+                        : 'Failed to save PDF';
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(message),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
                   icon: const Icon(Icons.download_rounded),
                   tooltip: 'Download PDF',
                 ),

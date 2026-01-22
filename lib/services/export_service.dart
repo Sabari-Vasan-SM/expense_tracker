@@ -382,21 +382,8 @@ class ExportService {
       ),
     );
 
-    // Save PDF
-    final pdfBytes = await pdf.save();
-
-    if (kIsWeb) {
-      // For web, just return the bytes (will be handled by caller)
-      return pdfBytes;
-    } else {
-      // For mobile, save to file and return the bytes
-      final directory = await getApplicationDocumentsDirectory();
-      final file = File(
-        '${directory.path}/Expense_Report_${DateTime.now().millisecondsSinceEpoch}.pdf',
-      );
-      await file.writeAsBytes(pdfBytes);
-      return pdfBytes;
-    }
+    // Return raw bytes; saving/sharing handled by caller
+    return await pdf.save();
   }
 
   /// Generate TXT file with expenses
@@ -506,20 +493,34 @@ class ExportService {
     }
   }
 
-  /// Download expenses as PDF
-  static Future<void> downloadExpensePDF(List<Expense> expenses) async {
+  /// Download (save + share) expenses as PDF
+  static Future<String?> downloadExpensePDF(List<Expense> expenses) async {
     final pdfBytes = await generateExpensePDF(expenses);
+    final filename =
+        'Expense_Report_${DateTime.now().millisecondsSinceEpoch}.pdf';
 
     if (kIsWeb) {
       // For web, trigger browser download
-      web_helper.downloadFile(
-        pdfBytes,
-        'Expense_Report_${DateTime.now().millisecondsSinceEpoch}.pdf',
+      web_helper.downloadFile(pdfBytes, filename);
+      return filename;
+    }
+
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/$filename');
+      await file.writeAsBytes(pdfBytes, flush: true);
+
+      // Show Android/iOS share sheet so user can open/save elsewhere
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        subject: 'Expense Tracker PDF',
+        text: 'Expense report generated from Expense Tracker.',
       );
-      print('PDF downloaded successfully');
-    } else {
-      // For mobile, file is already saved
-      print('PDF saved to device');
+
+      return file.path;
+    } catch (e) {
+      debugPrint('Failed to save or share PDF: $e');
+      return null;
     }
   }
 
