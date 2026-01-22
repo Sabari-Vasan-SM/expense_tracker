@@ -19,6 +19,9 @@ class ExpenseStorageService {
     if (!Hive.isAdapterRegistered(1)) {
       Hive.registerAdapter(ExpenseAdapter());
     }
+    if (!Hive.isAdapterRegistered(2)) {
+      Hive.registerAdapter(PaymentMethodAdapter());
+    }
 
     _expenseBox = await Hive.openBox<Expense>(_boxName);
   }
@@ -40,6 +43,7 @@ class ExpenseStorageService {
     required double amount,
     required ExpenseCategory category,
     required DateTime date,
+    required PaymentMethod paymentMethod,
   }) async {
     final expense = Expense(
       id: _uuid.v4(),
@@ -47,6 +51,7 @@ class ExpenseStorageService {
       amount: amount,
       category: category,
       date: date,
+      paymentMethod: paymentMethod,
     );
 
     await _expenseBox.put(expense.id, expense);

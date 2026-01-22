@@ -54,39 +54,47 @@ class _ExpenseChartState extends State<ExpenseChart>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
-                  'Analytics',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    'Analytics',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                SegmentedButton<int>(
-                  segments: const [
-                    ButtonSegment(
-                      value: 0,
-                      label: Text('Weekly'),
-                      icon: Icon(Icons.bar_chart_rounded, size: 18),
-                    ),
-                    ButtonSegment(
-                      value: 1,
-                      label: Text('Category'),
-                      icon: Icon(Icons.pie_chart_rounded, size: 18),
-                    ),
-                  ],
-                  selected: {_selectedChartIndex},
-                  onSelectionChanged: (selection) {
-                    setState(() {
-                      _selectedChartIndex = selection.first;
-                    });
-                    _animationController.reset();
-                    _animationController.forward();
-                  },
-                  style: ButtonStyle(
-                    visualDensity: VisualDensity.compact,
-                    textStyle: WidgetStateProperty.all(
-                      theme.textTheme.labelSmall,
+                SizedBox(
+                  height: 36,
+                  child: SegmentedButton<int>(
+                    segments: const [
+                      ButtonSegment(
+                        value: 0,
+                        label: Text('Weekly'),
+                        icon: Icon(Icons.bar_chart_rounded, size: 18),
+                      ),
+                      ButtonSegment(
+                        value: 1,
+                        label: Text('Category'),
+                        icon: Icon(Icons.pie_chart_rounded, size: 18),
+                      ),
+                    ],
+                    selected: {_selectedChartIndex},
+                    onSelectionChanged: (selection) {
+                      setState(() {
+                        _selectedChartIndex = selection.first;
+                      });
+                      _animationController.reset();
+                      _animationController.forward();
+                    },
+                    style: ButtonStyle(
+                      padding: WidgetStateProperty.all(
+                        const EdgeInsets.symmetric(horizontal: 12),
+                      ),
+                      visualDensity: VisualDensity.compact,
+                      textStyle: WidgetStateProperty.all(
+                        theme.textTheme.labelSmall,
+                      ),
                     ),
                   ),
                 ),
@@ -247,19 +255,26 @@ class _ExpenseChartState extends State<ExpenseChart>
           enabled: true,
           touchCallback: (event, response) {},
         ),
-        sectionsSpace: 3,
-        centerSpaceRadius: 50,
+        sectionsSpace: 2,
+        centerSpaceRadius: 40,
         sections: categoryEntries.map((entry) {
           final percentage = (entry.value / total) * 100;
           return PieChartSectionData(
             value: entry.value * _animation.value,
             title: '${percentage.toStringAsFixed(0)}%',
             color: Color(entry.key.colorValue),
-            radius: 45,
+            radius: 70,
             titleStyle: const TextStyle(
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
               color: Colors.white,
+              shadows: [
+                Shadow(
+                  color: Colors.black26,
+                  offset: Offset(1, 1),
+                  blurRadius: 2,
+                ),
+              ],
             ),
           );
         }).toList(),

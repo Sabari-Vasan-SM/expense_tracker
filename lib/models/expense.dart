@@ -18,6 +18,18 @@ enum ExpenseCategory {
   other,
 }
 
+@HiveType(typeId: 2)
+enum PaymentMethod {
+  @HiveField(0)
+  cash,
+  @HiveField(1)
+  upi,
+  @HiveField(2)
+  card,
+  @HiveField(3)
+  other,
+}
+
 /// Extension to provide display properties for categories
 extension ExpenseCategoryExtension on ExpenseCategory {
   String get displayName {
@@ -81,6 +93,21 @@ extension ExpenseCategoryExtension on ExpenseCategory {
   }
 }
 
+extension PaymentMethodExtension on PaymentMethod {
+  String get displayName {
+    switch (this) {
+      case PaymentMethod.cash:
+        return 'Cash';
+      case PaymentMethod.upi:
+        return 'UPI';
+      case PaymentMethod.card:
+        return 'Card';
+      case PaymentMethod.other:
+        return 'Other';
+    }
+  }
+}
+
 /// Expense model with Hive annotations
 @HiveType(typeId: 1)
 class Expense extends HiveObject {
@@ -102,12 +129,16 @@ class Expense extends HiveObject {
   @HiveField(5)
   DateTime createdAt;
 
+  @HiveField(6)
+  PaymentMethod paymentMethod;
+
   Expense({
     required this.id,
     required this.title,
     required this.amount,
     required this.category,
     required this.date,
+    this.paymentMethod = PaymentMethod.other,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -117,6 +148,7 @@ class Expense extends HiveObject {
     double? amount,
     ExpenseCategory? category,
     DateTime? date,
+    PaymentMethod? paymentMethod,
   }) {
     return Expense(
       id: id ?? this.id,
@@ -124,12 +156,13 @@ class Expense extends HiveObject {
       amount: amount ?? this.amount,
       category: category ?? this.category,
       date: date ?? this.date,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
       createdAt: createdAt,
     );
   }
 
   @override
   String toString() {
-    return 'Expense(id: $id, title: $title, amount: $amount, category: $category, date: $date)';
+    return 'Expense(id: $id, title: $title, amount: $amount, category: $category, date: $date, paymentMethod: $paymentMethod)';
   }
 }

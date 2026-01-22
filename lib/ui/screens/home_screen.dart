@@ -1,4 +1,6 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import '../../models/expense.dart';
 import '../../services/expense_storage_service.dart';
@@ -14,7 +16,14 @@ import '../widgets/all_expenses_dialog.dart';
 
 /// Main home screen with expense list and summary
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final Function(ThemeMode) onThemeChanged;
+  final ThemeMode currentThemeMode;
+
+  const HomeScreen({
+    super.key,
+    required this.onThemeChanged,
+    required this.currentThemeMode,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -27,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _selectedIndex = 0;
 
   // Animation controllers for list items
-  final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
+  GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
 
   @override
   void initState() {
@@ -56,6 +65,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     setState(() {
       _expenses = _storageService.getAllExpenses();
       _isLoading = false;
+      _listKey = GlobalKey<AnimatedListState>();
     });
   }
 
@@ -64,22 +74,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     double amount,
     ExpenseCategory category,
     DateTime date,
+    PaymentMethod paymentMethod,
   ) async {
-    final expense = await _storageService.addExpense(
+    await _storageService.addExpense(
       title: title,
       amount: amount,
       category: category,
       date: date,
+      paymentMethod: paymentMethod,
     );
 
-    setState(() {
-      _expenses.insert(0, expense);
-    });
-
-    _listKey.currentState?.insertItem(
-      0,
-      duration: const Duration(milliseconds: 400),
-    );
+    // Reload all expenses to maintain proper date sorting
+    _loadExpenses();
   }
 
   Future<void> _updateExpense(
@@ -88,12 +94,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     double amount,
     ExpenseCategory category,
     DateTime date,
+    PaymentMethod paymentMethod,
   ) async {
     final updatedExpense = expense.copyWith(
       title: title,
       amount: amount,
       category: category,
       date: date,
+      paymentMethod: paymentMethod,
     );
 
     await _storageService.updateExpense(updatedExpense);
@@ -129,26 +137,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  void _showAddExpenseSheet() {
+  void _showExpenseSheet({Expense? expense}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (context) => ExpenseBottomSheet(onSave: _addExpense),
-    );
-  }
-
-  void _showEditExpenseSheet(Expense expense) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (context) => ExpenseBottomSheet(
-        expense: expense,
-        onSave: (title, amount, category, date) {
-          _updateExpense(expense, title, amount, category, date);
-        },
-      ),
+      builder: (context) {
+        return ExpenseBottomSheet(
+          expense: expense,
+          onSave: (title, amount, category, date, paymentMethod) {
+            if (expense == null) {
+              _addExpense(title, amount, category, date, paymentMethod);
+            } else {
+              _updateExpense(
+                expense,
+                title,
+                amount,
+                category,
+                date,
+                paymentMethod,
+              );
+            }
+          },
+        );
+      },
     );
   }
 
@@ -194,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           : _buildBody(theme),
       floatingActionButton: _selectedIndex == 0
           ? FloatingActionButton.extended(
-              onPressed: _showAddExpenseSheet,
+              onPressed: () => _showExpenseSheet(),
               icon: const Icon(Icons.add_rounded),
               label: const Text('Add Expense'),
             )
@@ -242,15 +254,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildExpensesList(ThemeData theme) {
-    if (_expenses.isEmpty) {
-      return EmptyState(
-        title: 'No expenses yet',
-        subtitle: 'Start tracking your expenses by adding your first one.',
-        onAction: _showAddExpenseSheet,
-        actionLabel: 'Add Expense',
-      );
-    }
-
     return CustomScrollView(
       key: const ValueKey('expenses'),
       slivers: [
@@ -260,6 +263,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           pinned: true,
           centerTitle: false,
           actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 8, top: 8),
+              child: IconButton(
+                icon: const Icon(Icons.more_vert_rounded),
+                tooltip: 'More options',
+                onPressed: () => _showOptionsMenu(context),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.only(right: 16, top: 8),
               child: IconButton(
@@ -288,71 +299,86 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
           ),
         ),
-        // Summary cards
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: SummaryCard(
-                    title: 'Today',
-                    amount: _storageService.getTodayTotal(),
-                    icon: Icons.today_rounded,
-                    color: theme.colorScheme.tertiary,
-                    onTap: () =>
-                        _showExpensesDetail('Today', _getTodayExpenses()),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: SummaryCard(
-                    title: 'This Month',
-                    amount: _storageService.getCurrentMonthTotal(),
-                    icon: Icons.calendar_month_rounded,
-                    color: theme.colorScheme.primary,
-                    onTap: () =>
-                        _showExpensesDetail('This Month', _getMonthExpenses()),
-                  ),
-                ),
-              ],
+        if (_expenses.isEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: EmptyState(
+                title: 'No expenses yet',
+                subtitle:
+                    'Start tracking your expenses by adding your first one.',
+                onAction: () => _showExpenseSheet(),
+                actionLabel: 'Add Expense',
+              ),
             ),
-          ),
-        ),
-        // Section title
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          sliver: SliverToBoxAdapter(
-            child: Text(
-              'Recent Transactions',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+          )
+        else ...[
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SummaryCard(
+                      title: 'Today',
+                      amount: _storageService.getTodayTotal(),
+                      icon: Icons.today_rounded,
+                      color: theme.colorScheme.tertiary,
+                      onTap: () =>
+                          _showExpensesDetail('Today', _getTodayExpenses()),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SummaryCard(
+                      title: 'This Month',
+                      amount: _storageService.getCurrentMonthTotal(),
+                      icon: Icons.calendar_month_rounded,
+                      color: theme.colorScheme.primary,
+                      onTap: () => _showExpensesDetail(
+                        'This Month',
+                        _getMonthExpenses(),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        ),
-        // Expense list
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          sliver: SliverAnimatedList(
-            key: _listKey,
-            initialItemCount: _expenses.length,
-            itemBuilder: (context, index, animation) {
-              if (index >= _expenses.length) return const SizedBox.shrink();
-              final expense = _expenses[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: ExpenseCard(
-                  expense: expense,
-                  animation: animation,
-                  onTap: () => _showEditExpenseSheet(expense),
-                  onDelete: () => _showDeleteConfirmation(index),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            sliver: SliverToBoxAdapter(
+              child: Text(
+                'Recent Transactions',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
                 ),
-              );
-            },
+              ),
+            ),
           ),
-        ),
-        const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            sliver: SliverAnimatedList(
+              key: _listKey,
+              initialItemCount: _expenses.length,
+              itemBuilder: (context, index, animation) {
+                if (index >= _expenses.length) return const SizedBox.shrink();
+                final expense = _expenses[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: ExpenseCard(
+                    expense: expense,
+                    animation: animation,
+                    onTap: () => _showExpenseSheet(expense: expense),
+                    onDelete: () => _showDeleteConfirmation(index),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
+        ],
       ],
     );
   }
@@ -374,24 +400,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           pinned: true,
           centerTitle: false,
           actions: [
-            if (_expenses.isNotEmpty) ...[
-              Padding(
-                padding: const EdgeInsets.only(right: 8, top: 8),
-                child: IconButton(
-                  onPressed: () => ExportService.shareExpenses(_expenses),
-                  icon: const Icon(Icons.share_rounded),
-                  tooltip: 'Share',
-                ),
+            Padding(
+              padding: const EdgeInsets.only(right: 8, top: 8),
+              child: IconButton(
+                icon: const Icon(Icons.more_vert_rounded),
+                tooltip: 'More options',
+                onPressed: () => _showOptionsMenu(context),
               ),
-              Padding(
-                padding: const EdgeInsets.only(right: 8, top: 8),
-                child: IconButton(
-                  onPressed: () => ExportService.downloadExpensePDF(_expenses),
-                  icon: const Icon(Icons.download_rounded),
-                  tooltip: 'Download PDF',
-                ),
-              ),
-            ],
+            ),
             Padding(
               padding: const EdgeInsets.only(right: 16, top: 8),
               child: IconButton(
@@ -452,16 +468,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
         ),
-        SliverPadding(
-          padding: const EdgeInsets.all(16),
-          sliver: SliverToBoxAdapter(
-            child: ExpenseChart(
-              weeklyData: weeklyData,
-              categoryData: categoryData,
-            ),
+        // Compact trend tile
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildTrendTile(theme, weeklyData),
           ),
         ),
-        // Category breakdown
+        const SliverPadding(padding: EdgeInsets.only(top: 12)),
+        // Category breakdown first
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           sliver: SliverToBoxAdapter(
@@ -554,8 +569,151 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
         ),
+        const SliverPadding(padding: EdgeInsets.only(top: 12)),
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverToBoxAdapter(
+            child: ExpenseChart(
+              weeklyData: weeklyData,
+              categoryData: categoryData,
+            ),
+          ),
+        ),
         const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
       ],
+    );
+  }
+
+  Widget _buildTrendTile(ThemeData theme, Map<DateTime, double> weeklyData) {
+    final entries = weeklyData.entries.toList();
+    if (entries.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final spots = <FlSpot>[];
+    for (int i = 0; i < entries.length; i++) {
+      spots.add(FlSpot(i.toDouble(), entries[i].value));
+    }
+    final maxY = entries
+        .map((e) => e.value)
+        .fold<double>(0, (m, v) => v > m ? v : m);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Weekly Trend',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.show_chart_rounded,
+                  color: theme.colorScheme.primary,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 140,
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    horizontalInterval: maxY == 0 ? 25 : maxY / 4,
+                    getDrawingHorizontalLine: (value) {
+                      return FlLine(
+                        color: theme.colorScheme.outlineVariant.withOpacity(
+                          0.3,
+                        ),
+                        strokeWidth: 1,
+                      );
+                    },
+                  ),
+                  titlesData: FlTitlesData(
+                    show: true,
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 28,
+                        getTitlesWidget: (value, meta) {
+                          final index = value.toInt();
+                          if (index < 0 || index >= entries.length) {
+                            return const SizedBox.shrink();
+                          }
+                          final date = entries[index].key;
+                          final days = [
+                            'Mon',
+                            'Tue',
+                            'Wed',
+                            'Thu',
+                            'Fri',
+                            'Sat',
+                            'Sun',
+                          ];
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              days[date.weekday - 1],
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.outline,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 44,
+                        getTitlesWidget: (value, meta) {
+                          return Text(
+                            '₹${value.toInt()}',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.outline,
+                              fontSize: 10,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: spots,
+                      isCurved: true,
+                      color: theme.colorScheme.primary,
+                      barWidth: 3,
+                      dotData: const FlDotData(show: true),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: theme.colorScheme.primary.withOpacity(0.15),
+                      ),
+                    ),
+                  ],
+                  minY: 0,
+                  maxY: maxY == 0 ? 100 : maxY * 1.2,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -578,6 +736,129 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             child: const Text('Delete'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showOptionsMenu(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black54,
+      builder: (context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        child: Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Options',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Builder(
+                  builder: (context) {
+                    final hasExpenses = _expenses.isNotEmpty;
+                    return Column(
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.share_rounded),
+                          title: const Text('Share'),
+                          subtitle: hasExpenses
+                              ? null
+                              : const Text('Add an expense to enable sharing'),
+                          enabled: hasExpenses,
+                          onTap: !hasExpenses
+                              ? null
+                              : () async {
+                                  Navigator.pop(context);
+                                  await ExportService.shareExpenses(_expenses);
+                                },
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.download_rounded),
+                          title: const Text('Download PDF'),
+                          subtitle: hasExpenses
+                              ? null
+                              : const Text('Add an expense to enable export'),
+                          enabled: hasExpenses,
+                          onTap: !hasExpenses
+                              ? null
+                              : () async {
+                                  Navigator.pop(context);
+                                  final path =
+                                      await ExportService.downloadExpensePDF(
+                                        _expenses,
+                                      );
+                                  if (!mounted) return;
+                                  final message = path != null
+                                      ? 'PDF saved/share sheet opened'
+                                      : 'Failed to save PDF';
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(message),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                },
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        const Divider(),
+                      ],
+                    );
+                  },
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.brightness_6_rounded),
+                      const SizedBox(width: 12),
+                      const Text('Theme'),
+                      const Spacer(),
+                      SegmentedButton<ThemeMode>(
+                        segments: const [
+                          ButtonSegment(
+                            value: ThemeMode.light,
+                            icon: Icon(Icons.light_mode, size: 16),
+                          ),
+                          ButtonSegment(
+                            value: ThemeMode.dark,
+                            icon: Icon(Icons.dark_mode, size: 16),
+                          ),
+                        ],
+                        selected: {widget.currentThemeMode},
+                        onSelectionChanged: (Set<ThemeMode> newSelection) {
+                          widget.onThemeChanged(newSelection.first);
+                          Navigator.pop(context);
+                        },
+                        style: ButtonStyle(
+                          visualDensity: VisualDensity.compact,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
