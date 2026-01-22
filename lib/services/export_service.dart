@@ -467,29 +467,37 @@ class ExportService {
     throw UnsupportedError('File saving not supported on web');
   }
 
-  /// Share expenses as TXT
+  /// Share expenses as TXT (file on mobile, clipboard on web)
   static Future<void> shareExpenses(List<Expense> expenses) async {
     if (kIsWeb) {
-      // For web, generate text and copy to clipboard
       final textContent = await _generateExpenseText(expenses);
       try {
         await web_helper.copyToClipboard(textContent);
-        print('Expense data copied to clipboard');
+        debugPrint('Expense data copied to clipboard');
       } catch (e) {
-        print('Failed to copy to clipboard: $e');
+        debugPrint('Failed to copy to clipboard: $e');
       }
-    } else {
-      // For mobile, share as file
-      final file = await generateExpenseTXT(expenses);
-      final result = await Share.shareXFiles(
-        [XFile(file.path)],
-        subject: 'My Expense Report',
-        text: 'Check out my expense tracker report!',
-      );
+      return;
+    }
 
-      if (result.status == ShareResultStatus.success) {
-        print('Expenses shared successfully');
-      }
+    try {
+      final tmpDir = await getTemporaryDirectory();
+      final filePath =
+          '${tmpDir.path}/Expense_Report_${DateTime.now().millisecondsSinceEpoch}.txt';
+      final textContent = await _generateExpenseText(expenses);
+      final file = File(filePath);
+      await file.writeAsString(textContent, flush: true);
+
+      await Share.shareXFiles(
+        [XFile(file.path, mimeType: 'text/plain')],
+        subject: 'My Expense Report',
+        text: 'Expense report generated from Expense Tracker.',
+      );
+    } catch (e) {
+      debugPrint('Failed to share expenses: $e');
+      // Fallback: share plain text if file share fails
+      final textContent = await _generateExpenseText(expenses);
+      await Share.share(textContent, subject: 'My Expense Report');
     }
   }
 
