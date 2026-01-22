@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -15,7 +16,14 @@ import '../widgets/all_expenses_dialog.dart';
 
 /// Main home screen with expense list and summary
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final Function(ThemeMode) onThemeChanged;
+  final ThemeMode currentThemeMode;
+
+  const HomeScreen({
+    super.key,
+    required this.onThemeChanged,
+    required this.currentThemeMode,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -256,6 +264,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           centerTitle: false,
           actions: [
             Padding(
+              padding: const EdgeInsets.only(right: 8, top: 8),
+              child: IconButton(
+                icon: const Icon(Icons.more_vert_rounded),
+                tooltip: 'More options',
+                onPressed: () => _showOptionsMenu(context),
+              ),
+            ),
+            Padding(
               padding: const EdgeInsets.only(right: 16, top: 8),
               child: IconButton(
                 onPressed: () {
@@ -369,38 +385,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           pinned: true,
           centerTitle: false,
           actions: [
-            if (_expenses.isNotEmpty) ...[
-              Padding(
-                padding: const EdgeInsets.only(right: 8, top: 8),
-                child: IconButton(
-                  onPressed: () => ExportService.shareExpenses(_expenses),
-                  icon: const Icon(Icons.share_rounded),
-                  tooltip: 'Share',
-                ),
+            Padding(
+              padding: const EdgeInsets.only(right: 8, top: 8),
+              child: IconButton(
+                icon: const Icon(Icons.more_vert_rounded),
+                tooltip: 'More options',
+                onPressed: () => _showOptionsMenu(context),
               ),
-              Padding(
-                padding: const EdgeInsets.only(right: 8, top: 8),
-                child: IconButton(
-                  onPressed: () async {
-                    final path = await ExportService.downloadExpensePDF(
-                      _expenses,
-                    );
-                    if (!mounted) return;
-                    final message = path != null
-                        ? 'PDF saved/share sheet opened. File: $path'
-                        : 'Failed to save PDF';
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(message),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.download_rounded),
-                  tooltip: 'Download PDF',
-                ),
-              ),
-            ],
+            ),
             Padding(
               padding: const EdgeInsets.only(right: 16, top: 8),
               child: IconButton(
@@ -729,6 +721,113 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             child: const Text('Delete'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showOptionsMenu(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black54,
+      builder: (context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        child: Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Options',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                if (_expenses.isNotEmpty) ...[
+                  ListTile(
+                    leading: const Icon(Icons.share_rounded),
+                    title: const Text('Share'),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      await ExportService.shareExpenses(_expenses);
+                    },
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.download_rounded),
+                    title: const Text('Download PDF'),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final path = await ExportService.downloadExpensePDF(
+                        _expenses,
+                      );
+                      if (!mounted) return;
+                      final message = path != null
+                          ? 'PDF saved/share sheet opened'
+                          : 'Failed to save PDF';
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(message),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  const Divider(),
+                ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.brightness_6_rounded),
+                      const SizedBox(width: 12),
+                      const Text('Theme'),
+                      const Spacer(),
+                      SegmentedButton<ThemeMode>(
+                        segments: const [
+                          ButtonSegment(
+                            value: ThemeMode.light,
+                            icon: Icon(Icons.light_mode, size: 16),
+                          ),
+                          ButtonSegment(
+                            value: ThemeMode.dark,
+                            icon: Icon(Icons.dark_mode, size: 16),
+                          ),
+                        ],
+                        selected: {
+                          widget.currentThemeMode == ThemeMode.system
+                              ? ThemeMode.dark
+                              : widget.currentThemeMode,
+                        },
+                        onSelectionChanged: (Set<ThemeMode> newSelection) {
+                          widget.onThemeChanged(newSelection.first);
+                          Navigator.pop(context);
+                        },
+                        style: ButtonStyle(
+                          visualDensity: VisualDensity.compact,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

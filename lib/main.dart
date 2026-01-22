@@ -23,8 +23,21 @@ void main() {
 }
 
 /// Main application widget with Material 3 setup
-class ExpenseTrackerApp extends StatelessWidget {
+class ExpenseTrackerApp extends StatefulWidget {
   const ExpenseTrackerApp({super.key});
+
+  @override
+  State<ExpenseTrackerApp> createState() => _ExpenseTrackerAppState();
+}
+
+class _ExpenseTrackerAppState extends State<ExpenseTrackerApp> {
+  ThemeMode _themeMode = ThemeMode.dark;
+
+  void _toggleTheme(ThemeMode mode) {
+    setState(() {
+      _themeMode = mode;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,8 +46,11 @@ class ExpenseTrackerApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
-      home: const HomeScreen(),
+      themeMode: _themeMode,
+      home: HomeScreen(
+        onThemeChanged: _toggleTheme,
+        currentThemeMode: _themeMode,
+      ),
       // Custom page transitions
       builder: (context, child) {
         return child ?? const SizedBox.shrink();
