@@ -1,5 +1,9 @@
 # 💰 Expense Tracker v1.2
 
+[![Download APK](https://img.shields.io/badge/Download-APK-brightgreen?style=for-the-badge&logo=android)](https://drive.google.com/drive/u/2/folders/1kPCrZL7g6BNocOY0TXcW8-iHD7KosoR2)
+
+> **Note**: Only Android 64-bit (arm64-v8a) available. iOS coming soon!
+
 A modern, feature-rich expense tracking application built with Flutter and Material 3 design. Track your spending, visualize patterns, and manage payments efficiently.
 
 ![Flutter](https://img.shields.io/badge/Flutter-3.10+-blue?logo=flutter)
