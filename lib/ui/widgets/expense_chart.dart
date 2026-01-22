@@ -255,19 +255,26 @@ class _ExpenseChartState extends State<ExpenseChart>
           enabled: true,
           touchCallback: (event, response) {},
         ),
-        sectionsSpace: 3,
-        centerSpaceRadius: 50,
+        sectionsSpace: 2,
+        centerSpaceRadius: 40,
         sections: categoryEntries.map((entry) {
           final percentage = (entry.value / total) * 100;
           return PieChartSectionData(
             value: entry.value * _animation.value,
             title: '${percentage.toStringAsFixed(0)}%',
             color: Color(entry.key.colorValue),
-            radius: 45,
+            radius: 70,
             titleStyle: const TextStyle(
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
               color: Colors.white,
+              shadows: [
+                Shadow(
+                  color: Colors.black26,
+                  offset: Offset(1, 1),
+                  blurRadius: 2,
+                ),
+              ],
             ),
           );
         }).toList(),

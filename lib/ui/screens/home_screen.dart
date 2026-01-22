@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import '../../models/expense.dart';
 import '../../services/expense_storage_service.dart';
@@ -65,21 +66,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     ExpenseCategory category,
     DateTime date,
   ) async {
-    final expense = await _storageService.addExpense(
+    await _storageService.addExpense(
       title: title,
       amount: amount,
       category: category,
       date: date,
     );
 
-    setState(() {
-      _expenses.insert(0, expense);
-    });
-
-    _listKey.currentState?.insertItem(
-      0,
-      duration: const Duration(milliseconds: 400),
-    );
+    // Reload all expenses to maintain proper date sorting
+    _loadExpenses();
   }
 
   Future<void> _updateExpense(
@@ -466,16 +461,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
         ),
-        SliverPadding(
-          padding: const EdgeInsets.all(16),
-          sliver: SliverToBoxAdapter(
-            child: ExpenseChart(
-              weeklyData: weeklyData,
-              categoryData: categoryData,
-            ),
+        // Compact trend tile
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildTrendTile(theme, weeklyData),
           ),
         ),
-        // Category breakdown
+        const SliverPadding(padding: EdgeInsets.only(top: 12)),
+        // Category breakdown first
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           sliver: SliverToBoxAdapter(
@@ -568,8 +562,151 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
         ),
+        const SliverPadding(padding: EdgeInsets.only(top: 12)),
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverToBoxAdapter(
+            child: ExpenseChart(
+              weeklyData: weeklyData,
+              categoryData: categoryData,
+            ),
+          ),
+        ),
         const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
       ],
+    );
+  }
+
+  Widget _buildTrendTile(ThemeData theme, Map<DateTime, double> weeklyData) {
+    final entries = weeklyData.entries.toList();
+    if (entries.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final spots = <FlSpot>[];
+    for (int i = 0; i < entries.length; i++) {
+      spots.add(FlSpot(i.toDouble(), entries[i].value));
+    }
+    final maxY = entries
+        .map((e) => e.value)
+        .fold<double>(0, (m, v) => v > m ? v : m);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Weekly Trend',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.show_chart_rounded,
+                  color: theme.colorScheme.primary,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 140,
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    horizontalInterval: maxY == 0 ? 25 : maxY / 4,
+                    getDrawingHorizontalLine: (value) {
+                      return FlLine(
+                        color: theme.colorScheme.outlineVariant.withOpacity(
+                          0.3,
+                        ),
+                        strokeWidth: 1,
+                      );
+                    },
+                  ),
+                  titlesData: FlTitlesData(
+                    show: true,
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 28,
+                        getTitlesWidget: (value, meta) {
+                          final index = value.toInt();
+                          if (index < 0 || index >= entries.length) {
+                            return const SizedBox.shrink();
+                          }
+                          final date = entries[index].key;
+                          final days = [
+                            'Mon',
+                            'Tue',
+                            'Wed',
+                            'Thu',
+                            'Fri',
+                            'Sat',
+                            'Sun',
+                          ];
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              days[date.weekday - 1],
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.outline,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 44,
+                        getTitlesWidget: (value, meta) {
+                          return Text(
+                            '₹${value.toInt()}',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.outline,
+                              fontSize: 10,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: spots,
+                      isCurved: true,
+                      color: theme.colorScheme.primary,
+                      barWidth: 3,
+                      dotData: const FlDotData(show: true),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: theme.colorScheme.primary.withOpacity(0.15),
+                      ),
+                    ),
+                  ],
+                  minY: 0,
+                  maxY: maxY == 0 ? 100 : maxY * 1.2,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -134,7 +134,7 @@ class _ExpenseBottomSheetState extends State<ExpenseBottomSheet>
                       avatar: Icon(category.iconData, size: 18),
                       label: Text(category.displayName),
                       selectedColor: categoryColor.withOpacity(0.3),
-                      checkmarkColor: categoryColor,
+                      showCheckmark: false,
                       side: BorderSide(
                         color: isSelected ? categoryColor : Colors.transparent,
                         width: 2,
