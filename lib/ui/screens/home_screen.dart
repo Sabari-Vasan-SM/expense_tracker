@@ -36,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _selectedIndex = 0;
 
   // Animation controllers for list items
-  final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
+  GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
 
   @override
   void initState() {
@@ -65,6 +65,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     setState(() {
       _expenses = _storageService.getAllExpenses();
       _isLoading = false;
+      _listKey = GlobalKey<AnimatedListState>();
     });
   }
 
@@ -73,12 +74,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     double amount,
     ExpenseCategory category,
     DateTime date,
+    PaymentMethod paymentMethod,
   ) async {
     await _storageService.addExpense(
       title: title,
       amount: amount,
       category: category,
       date: date,
+      paymentMethod: paymentMethod,
     );
 
     // Reload all expenses to maintain proper date sorting
@@ -91,12 +94,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     double amount,
     ExpenseCategory category,
     DateTime date,
+    PaymentMethod paymentMethod,
   ) async {
     final updatedExpense = expense.copyWith(
       title: title,
       amount: amount,
       category: category,
       date: date,
+      paymentMethod: paymentMethod,
     );
 
     await _storageService.updateExpense(updatedExpense);
@@ -148,8 +153,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       useSafeArea: true,
       builder: (context) => ExpenseBottomSheet(
         expense: expense,
-        onSave: (title, amount, category, date) {
-          _updateExpense(expense, title, amount, category, date);
+        onSave: (title, amount, category, date, paymentMethod) {
+          _updateExpense(expense, title, amount, category, date, paymentMethod);
         },
       ),
     );
@@ -245,15 +250,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildExpensesList(ThemeData theme) {
-    if (_expenses.isEmpty) {
-      return EmptyState(
-        title: 'No expenses yet',
-        subtitle: 'Start tracking your expenses by adding your first one.',
-        onAction: _showAddExpenseSheet,
-        actionLabel: 'Add Expense',
-      );
-    }
-
     return CustomScrollView(
       key: const ValueKey('expenses'),
       slivers: [
@@ -299,71 +295,86 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
           ),
         ),
-        // Summary cards
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: SummaryCard(
-                    title: 'Today',
-                    amount: _storageService.getTodayTotal(),
-                    icon: Icons.today_rounded,
-                    color: theme.colorScheme.tertiary,
-                    onTap: () =>
-                        _showExpensesDetail('Today', _getTodayExpenses()),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: SummaryCard(
-                    title: 'This Month',
-                    amount: _storageService.getCurrentMonthTotal(),
-                    icon: Icons.calendar_month_rounded,
-                    color: theme.colorScheme.primary,
-                    onTap: () =>
-                        _showExpensesDetail('This Month', _getMonthExpenses()),
-                  ),
-                ),
-              ],
+        if (_expenses.isEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: EmptyState(
+                title: 'No expenses yet',
+                subtitle:
+                    'Start tracking your expenses by adding your first one.',
+                onAction: _showAddExpenseSheet,
+                actionLabel: 'Add Expense',
+              ),
             ),
-          ),
-        ),
-        // Section title
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          sliver: SliverToBoxAdapter(
-            child: Text(
-              'Recent Transactions',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+          )
+        else ...[
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SummaryCard(
+                      title: 'Today',
+                      amount: _storageService.getTodayTotal(),
+                      icon: Icons.today_rounded,
+                      color: theme.colorScheme.tertiary,
+                      onTap: () =>
+                          _showExpensesDetail('Today', _getTodayExpenses()),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SummaryCard(
+                      title: 'This Month',
+                      amount: _storageService.getCurrentMonthTotal(),
+                      icon: Icons.calendar_month_rounded,
+                      color: theme.colorScheme.primary,
+                      onTap: () => _showExpensesDetail(
+                        'This Month',
+                        _getMonthExpenses(),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        ),
-        // Expense list
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          sliver: SliverAnimatedList(
-            key: _listKey,
-            initialItemCount: _expenses.length,
-            itemBuilder: (context, index, animation) {
-              if (index >= _expenses.length) return const SizedBox.shrink();
-              final expense = _expenses[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: ExpenseCard(
-                  expense: expense,
-                  animation: animation,
-                  onTap: () => _showEditExpenseSheet(expense),
-                  onDelete: () => _showDeleteConfirmation(index),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            sliver: SliverToBoxAdapter(
+              child: Text(
+                'Recent Transactions',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
                 ),
-              );
-            },
+              ),
+            ),
           ),
-        ),
-        const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            sliver: SliverAnimatedList(
+              key: _listKey,
+              initialItemCount: _expenses.length,
+              itemBuilder: (context, index, animation) {
+                if (index >= _expenses.length) return const SizedBox.shrink();
+                final expense = _expenses[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: ExpenseCard(
+                    expense: expense,
+                    animation: animation,
+                    onTap: () => _showEditExpenseSheet(expense),
+                    onDelete: () => _showDeleteConfirmation(index),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
+        ],
       ],
     );
   }
@@ -748,43 +759,63 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
-                if (_expenses.isNotEmpty) ...[
-                  ListTile(
-                    leading: const Icon(Icons.share_rounded),
-                    title: const Text('Share'),
-                    onTap: () async {
-                      Navigator.pop(context);
-                      await ExportService.shareExpenses(_expenses);
-                    },
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.download_rounded),
-                    title: const Text('Download PDF'),
-                    onTap: () async {
-                      Navigator.pop(context);
-                      final path = await ExportService.downloadExpensePDF(
-                        _expenses,
-                      );
-                      if (!mounted) return;
-                      final message = path != null
-                          ? 'PDF saved/share sheet opened'
-                          : 'Failed to save PDF';
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(message),
-                          behavior: SnackBarBehavior.floating,
+                Builder(
+                  builder: (context) {
+                    final hasExpenses = _expenses.isNotEmpty;
+                    return Column(
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.share_rounded),
+                          title: const Text('Share'),
+                          subtitle: hasExpenses
+                              ? null
+                              : const Text('Add an expense to enable sharing'),
+                          enabled: hasExpenses,
+                          onTap: !hasExpenses
+                              ? null
+                              : () async {
+                                  Navigator.pop(context);
+                                  await ExportService.shareExpenses(_expenses);
+                                },
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                      );
-                    },
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  const Divider(),
-                ],
+                        ListTile(
+                          leading: const Icon(Icons.download_rounded),
+                          title: const Text('Download PDF'),
+                          subtitle: hasExpenses
+                              ? null
+                              : const Text('Add an expense to enable export'),
+                          enabled: hasExpenses,
+                          onTap: !hasExpenses
+                              ? null
+                              : () async {
+                                  Navigator.pop(context);
+                                  final path =
+                                      await ExportService.downloadExpensePDF(
+                                        _expenses,
+                                      );
+                                  if (!mounted) return;
+                                  final message = path != null
+                                      ? 'PDF saved/share sheet opened'
+                                      : 'Failed to save PDF';
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(message),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                },
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        const Divider(),
+                      ],
+                    );
+                  },
+                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,

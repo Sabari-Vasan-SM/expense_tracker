@@ -9,6 +9,7 @@ class ExpenseBottomSheet extends StatefulWidget {
     double amount,
     ExpenseCategory category,
     DateTime date,
+    PaymentMethod paymentMethod,
   )
   onSave;
 
@@ -24,6 +25,7 @@ class _ExpenseBottomSheetState extends State<ExpenseBottomSheet>
   late TextEditingController _amountController;
   late ExpenseCategory _selectedCategory;
   late DateTime _selectedDate;
+  late PaymentMethod _paymentMethod;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -36,6 +38,7 @@ class _ExpenseBottomSheetState extends State<ExpenseBottomSheet>
     );
     _selectedCategory = widget.expense?.category ?? ExpenseCategory.other;
     _selectedDate = widget.expense?.date ?? DateTime.now();
+    _paymentMethod = widget.expense?.paymentMethod ?? PaymentMethod.other;
 
     _animationController = AnimationController(
       vsync: this,
@@ -145,6 +148,35 @@ class _ExpenseBottomSheetState extends State<ExpenseBottomSheet>
               ),
               const SizedBox(height: 24),
 
+              // Payment method selection
+              Text(
+                'Payment Method',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              SegmentedButton<PaymentMethod>(
+                segments: const [
+                  ButtonSegment(value: PaymentMethod.cash, label: Text('Cash')),
+                  ButtonSegment(value: PaymentMethod.upi, label: Text('UPI')),
+                  ButtonSegment(value: PaymentMethod.card, label: Text('Card')),
+                  ButtonSegment(
+                    value: PaymentMethod.other,
+                    label: Text('Other'),
+                  ),
+                ],
+                selected: {_paymentMethod},
+                onSelectionChanged: (selection) {
+                  setState(() => _paymentMethod = selection.first);
+                },
+                style: const ButtonStyle(
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+              const SizedBox(height: 24),
+
               // Date picker
               Text(
                 'Date',
@@ -225,7 +257,13 @@ class _ExpenseBottomSheetState extends State<ExpenseBottomSheet>
       return;
     }
 
-    widget.onSave(title, amount, _selectedCategory, _selectedDate);
+    widget.onSave(
+      title,
+      amount,
+      _selectedCategory,
+      _selectedDate,
+      _paymentMethod,
+    );
     Navigator.of(context).pop();
   }
 

@@ -8,13 +8,17 @@ class AppTheme {
   static const Color surfaceColor = Color(0xFFFFFBFE);
   static const Color backgroundColor = Color(0xFFF7F2FA);
 
-  static ThemeData get lightTheme {
+  static ThemeData lightTheme({ColorScheme? colorScheme}) {
+    final ColorScheme scheme =
+        colorScheme ??
+        ColorScheme.fromSeed(
+          seedColor: primaryColor,
+          brightness: Brightness.light,
+        );
+
     return ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: primaryColor,
-        brightness: Brightness.light,
-      ),
+      colorScheme: scheme,
       fontFamily: 'Roboto',
       appBarTheme: const AppBarTheme(
         centerTitle: true,
@@ -72,13 +76,17 @@ class AppTheme {
     );
   }
 
-  static ThemeData get darkTheme {
+  static ThemeData darkTheme({ColorScheme? colorScheme}) {
+    final ColorScheme scheme =
+        colorScheme ??
+        ColorScheme.fromSeed(
+          seedColor: primaryColor,
+          brightness: Brightness.dark,
+        );
+
     return ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: primaryColor,
-        brightness: Brightness.dark,
-      ),
+      colorScheme: scheme,
       fontFamily: 'Roboto',
       appBarTheme: const AppBarTheme(
         centerTitle: true,

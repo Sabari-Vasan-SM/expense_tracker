@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 import 'ui/theme/app_theme.dart';
 import 'ui/screens/home_screen.dart';
+import 'ui/screens/splash_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,19 +43,31 @@ class _ExpenseTrackerAppState extends State<ExpenseTrackerApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Expense Tracker',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: _themeMode,
-      home: HomeScreen(
-        onThemeChanged: _toggleTheme,
-        currentThemeMode: _themeMode,
-      ),
-      // Custom page transitions
-      builder: (context, child) {
-        return child ?? const SizedBox.shrink();
+    return DynamicColorBuilder(
+      builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
+        final Color seed = AppTheme.primaryColor;
+        final ColorScheme lightScheme =
+            lightDynamic ??
+            ColorScheme.fromSeed(seedColor: seed, brightness: Brightness.light);
+        final ColorScheme darkScheme =
+            darkDynamic ??
+            ColorScheme.fromSeed(seedColor: seed, brightness: Brightness.dark);
+
+        return MaterialApp(
+          title: 'Expense Tracker',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme(colorScheme: lightScheme),
+          darkTheme: AppTheme.darkTheme(colorScheme: darkScheme),
+          themeMode: _themeMode,
+          home: SplashScreen(
+            onThemeChanged: _toggleTheme,
+            currentThemeMode: _themeMode,
+          ),
+          // Custom page transitions
+          builder: (context, child) {
+            return child ?? const SizedBox.shrink();
+          },
+        );
       },
     );
   }
