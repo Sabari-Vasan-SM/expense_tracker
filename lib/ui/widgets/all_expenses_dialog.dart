@@ -23,6 +23,16 @@ class _AllExpensesDialogState extends State<AllExpensesDialog> {
     _filteredExpenses = widget.expenses;
   }
 
+  void _deleteExpense(Expense expense) {
+    setState(() {
+      _filteredExpenses.removeWhere((e) => e == expense);
+      widget.expenses.removeWhere((e) => e == expense);
+    });
+    if (_filteredExpenses.isEmpty) {
+      Navigator.pop(context);
+    }
+  }
+
   void _applyDateFilter() async {
     final start = await showDatePicker(
       context: context,
@@ -227,7 +237,8 @@ class _AllExpensesDialogState extends State<AllExpensesDialog> {
                         child: ExpenseCard(
                           expense: _filteredExpenses[index],
                           onTap: () {},
-                          onDelete: () {},
+                          onDelete: () =>
+                              _deleteExpense(_filteredExpenses[index]),
                         ),
                       ),
                     ),

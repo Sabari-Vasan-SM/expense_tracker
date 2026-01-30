@@ -17,7 +17,6 @@ class AppTheme {
         );
     final ColorScheme scheme = baseScheme.copyWith(
       surface: Colors.white,
-      background: Colors.white,
       surfaceTint: Colors.transparent,
     );
 
@@ -25,7 +24,6 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: scheme,
       scaffoldBackgroundColor: Colors.white,
-      dialogBackgroundColor: Colors.white,
       cardColor: Colors.white,
       fontFamily: 'Roboto',
       appBarTheme: const AppBarTheme(
@@ -80,7 +78,7 @@ class AppTheme {
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      ),
+      ), dialogTheme: DialogThemeData(backgroundColor: Colors.white),
     );
   }
 

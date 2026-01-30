@@ -57,43 +57,52 @@ class _ExpenseChartState extends State<ExpenseChart>
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
-                  child: Text(
-                    'Analytics',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Analytics',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
-                SizedBox(
-                  height: 36,
-                  child: SegmentedButton<int>(
-                    segments: const [
-                      ButtonSegment(
-                        value: 0,
-                        label: Text('Weekly'),
-                        icon: Icon(Icons.bar_chart_rounded, size: 18),
-                      ),
-                      ButtonSegment(
-                        value: 1,
-                        label: Text('Category'),
-                        icon: Icon(Icons.pie_chart_rounded, size: 18),
-                      ),
-                    ],
-                    selected: {_selectedChartIndex},
-                    onSelectionChanged: (selection) {
-                      setState(() {
-                        _selectedChartIndex = selection.first;
-                      });
-                      _animationController.reset();
-                      _animationController.forward();
-                    },
-                    style: ButtonStyle(
-                      padding: WidgetStateProperty.all(
-                        const EdgeInsets.symmetric(horizontal: 12),
-                      ),
-                      visualDensity: VisualDensity.compact,
-                      textStyle: WidgetStateProperty.all(
-                        theme.textTheme.labelSmall,
+                const SizedBox(width: 12),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: SizedBox(
+                    height: 36,
+                    child: SegmentedButton<int>(
+                      segments: const [
+                        ButtonSegment(
+                          value: 0,
+                          label: Text('Weekly'),
+                          icon: Icon(Icons.bar_chart_rounded, size: 18),
+                        ),
+                        ButtonSegment(
+                          value: 1,
+                          label: Text('Category'),
+                          icon: Icon(Icons.pie_chart_rounded, size: 18),
+                        ),
+                      ],
+                      selected: {_selectedChartIndex},
+                      onSelectionChanged: (selection) {
+                        setState(() {
+                          _selectedChartIndex = selection.first;
+                        });
+                        _animationController.reset();
+                        _animationController.forward();
+                      },
+                      style: ButtonStyle(
+                        padding: WidgetStateProperty.all(
+                          const EdgeInsets.symmetric(horizontal: 12),
+                        ),
+                        visualDensity: VisualDensity.compact,
+                        textStyle: WidgetStateProperty.all(
+                          theme.textTheme.labelSmall,
+                        ),
                       ),
                     ),
                   ),
