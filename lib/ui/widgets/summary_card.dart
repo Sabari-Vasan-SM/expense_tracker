@@ -68,23 +68,28 @@ class SummaryCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: amount),
-                  duration: const Duration(milliseconds: 800),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) {
-                    return FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        '₹${value.toStringAsFixed(2)}',
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: cardColor,
-                        ),
-                      ),
-                    );
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 250),
+                  switchInCurve: Curves.easeOut,
+                  switchOutCurve: Curves.easeIn,
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(opacity: animation, child: child);
                   },
+                  child: FittedBox(
+                    key: ValueKey(amount.toStringAsFixed(2)),
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '₹${amount.toStringAsFixed(2)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.visible,
+                      softWrap: false,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: cardColor,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
