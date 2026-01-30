@@ -167,23 +167,51 @@ class _ExpenseCardState extends State<ExpenseCard>
               children: [
                 const Divider(height: 1, indent: 16, endIndent: 16),
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: _handleDelete,
-                      icon: const Icon(Icons.delete_rounded),
-                      label: const Text('Delete Expense'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: theme.colorScheme.error.withOpacity(
-                          0.9,
-                        ),
-                        foregroundColor: theme.colorScheme.onError,
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Payment method
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.payment_rounded,
+                            size: 18,
+                            color: theme.colorScheme.outline,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Payment Method',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.outline,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            widget.expense.paymentMethod.displayName,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      // Delete button
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: _handleDelete,
+                          icon: const Icon(Icons.delete_rounded),
+                          label: const Text('Delete Expense'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: theme.colorScheme.error.withOpacity(
+                              0.9,
+                            ),
+                            foregroundColor: theme.colorScheme.onError,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
