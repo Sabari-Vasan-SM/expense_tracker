@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import '../../models/expense.dart';
@@ -371,7 +372,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     expense: expense,
                     animation: animation,
                     onTap: () => _showExpenseSheet(expense: expense),
-                    onDelete: () => _showDeleteConfirmation(index),
+                    onDelete: () => _deleteExpense(index),
                   ),
                 );
               },
@@ -815,6 +816,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
+                        ListTile(
+                          leading: const Icon(Icons.people_rounded),
+                          title: const Text('Invite People'),
+                          subtitle: const Text('Share app link via WhatsApp'),
+                          onTap: () async {
+                            Navigator.pop(context);
+                            await Share.share(
+                              'Check out Expense Tracker! Track your expenses easily.\n\nhttps://exptrackerapp.vasan.tech/',
+                              subject: 'Expense Tracker App',
+                            );
+                          },
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
                         const Divider(),
                       ],
                     );
@@ -831,26 +847,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       const SizedBox(width: 12),
                       const Text('Theme'),
                       const Spacer(),
-                      SegmentedButton<ThemeMode>(
-                        segments: const [
-                          ButtonSegment(
-                            value: ThemeMode.light,
-                            icon: Icon(Icons.light_mode, size: 16),
-                          ),
-                          ButtonSegment(
-                            value: ThemeMode.dark,
-                            icon: Icon(Icons.dark_mode, size: 16),
-                          ),
-                        ],
-                        selected: {widget.currentThemeMode},
-                        onSelectionChanged: (Set<ThemeMode> newSelection) {
-                          widget.onThemeChanged(newSelection.first);
+                      Switch(
+                        value: widget.currentThemeMode == ThemeMode.dark,
+                        onChanged: (isDark) {
+                          widget.onThemeChanged(
+                            isDark ? ThemeMode.dark : ThemeMode.light,
+                          );
                           Navigator.pop(context);
                         },
-                        style: ButtonStyle(
-                          visualDensity: VisualDensity.compact,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
                       ),
                     ],
                   ),

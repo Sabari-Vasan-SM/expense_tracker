@@ -132,7 +132,7 @@ class ExpensesDetailDialog extends StatelessWidget {
                         child: ExpenseCard(
                           expense: expenses[index],
                           onTap: () {},
-                          onDelete: () {},
+                          onDelete: () => Navigator.pop(context),
                         ),
                       ),
                     ),
