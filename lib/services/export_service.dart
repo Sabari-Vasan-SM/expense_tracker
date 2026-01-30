@@ -243,7 +243,7 @@ class ExportService {
                     ),
                   ],
                 );
-              }).toList(),
+              }),
             ],
           ),
           pw.SizedBox(height: 20),
@@ -362,7 +362,7 @@ class ExportService {
                     ),
                   ],
                 );
-              }).toList(),
+              }),
             ],
           ),
           pw.SizedBox(height: 20),
@@ -439,15 +439,12 @@ class ExportService {
 
     for (final expense in expenses) {
       buffer.writeln(
-        formatter.format(expense.date).padRight(15) +
-            expense.title
+        '${formatter.format(expense.date).padRight(15)}${expense.title
                 .substring(
                   0,
                   (expense.title.length > 19 ? 19 : expense.title.length),
                 )
-                .padRight(20) +
-            expense.category.displayName.padRight(15) +
-            'Rs.${currencyFormatter.format(expense.amount).padLeft(12)}',
+                .padRight(20)}${expense.category.displayName.padRight(15)}Rs.${currencyFormatter.format(expense.amount).padLeft(12)}',
       );
     }
 
@@ -588,10 +585,7 @@ class ExportService {
           ? expense.title.substring(0, 19)
           : expense.title;
       buffer.writeln(
-        formatter.format(expense.date).padRight(15) +
-            titleShort.padRight(20) +
-            expense.category.displayName.padRight(15) +
-            'Rs.${currencyFormatter.format(expense.amount).padLeft(12)}',
+        '${formatter.format(expense.date).padRight(15)}${titleShort.padRight(20)}${expense.category.displayName.padRight(15)}Rs.${currencyFormatter.format(expense.amount).padLeft(12)}',
       );
     }
 

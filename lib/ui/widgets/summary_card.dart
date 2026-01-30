@@ -73,11 +73,15 @@ class SummaryCard extends StatelessWidget {
                   duration: const Duration(milliseconds: 800),
                   curve: Curves.easeOutCubic,
                   builder: (context, value, child) {
-                    return Text(
-                      '₹${value.toStringAsFixed(2)}',
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: cardColor,
+                    return FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '₹${value.toStringAsFixed(2)}',
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: cardColor,
+                        ),
                       ),
                     );
                   },
